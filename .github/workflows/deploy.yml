@@ -28,7 +28,7 @@ jobs:
 
             # Tarik perubahan terbaru dari GitHub
             echo "🚚 Menarik perubahan terbaru dari branch main..."
-            git pull origin main || git clone https://github.com/NAMA_USER_ANDA/NAMA_REPO_ANDA.git .
+            git pull origin main || git clone https://github.com/akhmadzaqiriyadi/hki-app.git .
 
             # Deploy Backend (Server)
             echo "🚀 Memulai deployment backend..."
