@@ -1,0 +1,49 @@
+name: Deploy to VPS
+
+# Trigger: Jalankan workflow ini setiap kali ada push ke branch 'main'
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Langkah 1: Checkout kode dari repositori
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Langkah 2: Hubungkan ke VPS dan jalankan perintah deployment
+      - name: SSH to VPS and Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          script: |
+            # Masuk ke direktori proyek di VPS
+            cd ${{ secrets.VPS_TARGET_DIR }}
+
+            # Tarik perubahan terbaru dari GitHub
+            echo "🚚 Menarik perubahan terbaru dari branch main..."
+            git pull origin main || git clone https://github.com/NAMA_USER_ANDA/NAMA_REPO_ANDA.git .
+
+            # Deploy Backend (Server)
+            echo "🚀 Memulai deployment backend..."
+            cd server
+            npm install
+            npm run build
+            pm2 restart hki-backend || pm2 start dist/index.js --name "hki-backend"
+            echo "✅ Backend berhasil di-deploy."
+
+            # Deploy Frontend (Client)
+            echo "🚀 Memulai deployment frontend..."
+            cd ../client
+            npm install
+            npm run build
+            pm2 restart hki-frontend || pm2 start npm --name "hki-frontend" -- start
+            echo "✅ Frontend berhasil di-deploy."
+
+            echo "🎉 Deployment selesai!"
