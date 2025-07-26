@@ -1,5 +1,6 @@
-name: Deploy to VPS (via self-hosted runner)
+name: Deploy to VPS
 
+# Trigger: Jalankan workflow ini setiap kali ada push ke branch 'main'
 on:
   push:
     branches:
@@ -7,34 +8,42 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted  # Ini wajib agar job dijalankan di Mac kamu
+    runs-on: ubuntu-latest
 
     steps:
-      - name: 🔄 Checkout code
+      # Langkah 1: Checkout kode dari repositori
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 🚀 SSH ke VPS dan jalankan deployment
-        run: |
-          echo "🔐 Mulai koneksi SSH ke VPS..."
-          ssh -o StrictHostKeyChecking=no vps@192.168.254.200 << 'EOF'
-            set -e
-            echo "📁 Masuk ke direktori proyek..."
-            cd /home/vps/hki-app || git clone https://github.com/akhmadzaqiriyadi/hki-app.git
-            cd hki-app
-            echo "🔄 Menarik perubahan terbaru..."
-            git pull origin main
+      # Langkah 2: Hubungkan ke VPS dan jalankan perintah deployment
+      - name: SSH to VPS and Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          script: |
+            # Masuk ke direktori proyek di VPS
+            cd ${{ secrets.VPS_TARGET_DIR }}
 
-            echo "🚀 Deploy Backend..."
+            # Tarik perubahan terbaru dari GitHub
+            echo "🚚 Menarik perubahan terbaru dari branch main..."
+            git pull origin main || git clone https://github.com/NAMA_USER_ANDA/NAMA_REPO_ANDA.git .
+
+            # Deploy Backend (Server)
+            echo "🚀 Memulai deployment backend..."
             cd server
             npm install
             npm run build
             pm2 restart hki-backend || pm2 start dist/index.js --name "hki-backend"
+            echo "✅ Backend berhasil di-deploy."
 
-            echo "🚀 Deploy Frontend..."
+            # Deploy Frontend (Client)
+            echo "🚀 Memulai deployment frontend..."
             cd ../client
             npm install
             npm run build
             pm2 restart hki-frontend || pm2 start npm --name "hki-frontend" -- start
+            echo "✅ Frontend berhasil di-deploy."
 
-            echo "✅ Deployment selesai!"
-          EOF
+            echo "🎉 Deployment selesai!"
