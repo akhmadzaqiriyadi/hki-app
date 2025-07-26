@@ -1,0 +1,111 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// 1. Konfigurasi Koneksi Database
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 2. Definisi ENUM untuk konsistensi data
+enum UserRole {
+  User
+  Admin
+}
+
+enum StatusPendaftaran {
+  draft
+  submitted
+  review
+  revisi
+  approved
+  submitted_to_djki // Diperbarui dari 'diproses_hki'
+  rejected
+  granted          // Status baru ditambahkan
+}
+
+// 3. Model untuk Tabel Pengguna (Users)
+model User {
+  id           String        @id @default(uuid())
+  nama_lengkap String
+  email        String        @unique
+  password     String // Hash password akan disimpan di sini
+  role         UserRole      @default(User)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  // Relasi: Satu pengguna bisa memiliki banyak pendaftaran
+  pendaftaran Pendaftaran[]
+
+  @@map("users")
+}
+
+// 4. Model untuk Tabel Pendaftaran HKI
+model Pendaftaran {
+  id                 String            @id @default(uuid())
+  judul              String
+  jenis_pemilik      String
+  produk_hasil       String?
+  jenis_karya        String?
+  sub_jenis_karya    String?
+  kota_diumumkan     String?
+  tanggal_diumumkan  DateTime?
+  deskripsi_karya    String?           @db.Text
+  status             StatusPendaftaran @default(draft)
+  catatan_revisi     String?           @db.Text
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+
+  // URL untuk file-file yang diunggah
+  lampiran_karya_url     String?
+  surat_pernyataan_url   String?
+  scan_ktp_kolektif_url  String?
+  surat_pengalihan_url   String?
+  bukti_transfer_url     String? // Opsional sesuai alur baru
+
+  // Informasi Sertifikat
+  sertifikat_hki_url      String?
+  sertifikat_hki_filename String?
+  sertifikat_uploaded_at  DateTime?
+  
+  // Relasi: Satu pendaftaran dimiliki oleh satu pengguna (User)
+  user    User   @relation(fields: [userId], references: [id])
+  userId  String @map("user_id")
+
+  // Relasi: Satu pendaftaran bisa memiliki banyak pencipta
+  pencipta Pencipta[]
+
+  @@map("pendaftaran")
+}
+
+// 5. Model untuk Tabel Pencipta
+model Pencipta {
+  id              String   @id @default(uuid())
+  nama_lengkap    String
+  nik             String?
+  nip_nim         String?
+  email           String?
+  no_hp           String?
+  jenis_kelamin   String?
+  kewarganegaraan String?
+  negara          String?
+  provinsi        String?
+  kota            String?
+  kecamatan       String?
+  kelurahan       String?
+  alamat_lengkap  String?  @db.Text
+  kode_pos        String?
+  fakultas        String?
+  program_studi   String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relasi: Satu pencipta terhubung ke satu pendaftaran
+  pendaftaran    Pendaftaran @relation(fields: [pendaftaranId], references: [id], onDelete: Cascade)
+  pendaftaranId  String      @map("pendaftaran_id")
+
+  @@map("pencipta")
+}
