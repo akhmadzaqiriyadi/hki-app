@@ -11,8 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { FileText, Loader2, AlertCircle, Eye, Search } from "lucide-react";
-import { Pendaftaran, StatusPendaftaran } from "@/lib/types";
+import { Loader2, AlertCircle, Eye, Search } from "lucide-react";
+import { StatusPendaftaran } from "@/lib/types";
 
 // Helper yang sama dari dasbor pengguna, kita bisa pindahkan ke utils nanti
 const getStatusVariant = (status: StatusPendaftaran) => {
