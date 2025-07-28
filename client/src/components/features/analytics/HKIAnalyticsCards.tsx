@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart
 } from 'recharts';
@@ -20,32 +20,35 @@ import {
   RefreshCw,
   Send
 } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 
-// Interface untuk data analytics
+// --- PERUBAHAN: Impor hook yang baru dibuat ---
+import { useGetAnalyticsData } from '@/queries/queries/useGetAnalyticsData';
+
+// Interface untuk data analytics (tetap sama)
 interface HkiTypeDistribution {
   "Jenis HKI": string;
   Jumlah: number;
   percentage?: number;
 }
-
+// ... (interface lainnya tetap sama) ...
 interface HkiRegistrationsPerYear {
   "Tahun HKI": number;
   Jumlah: number;
   growth?: number;
 }
-
 interface HkiStatusDistribution {
   "Status": string;
   Jumlah: number;
   percentage?: number;
 }
-
 interface HkiAnalyticsData {
   hkiTypeDistribution: HkiTypeDistribution[];
   hkiRegistrationsPerYear: HkiRegistrationsPerYear[];
   hkiStatusDistribution: HkiStatusDistribution[];
+}
+// Tipe data yang diproses
+interface ProcessedAnalyticsData extends HkiAnalyticsData {
   totalHki?: number;
   totalThisYear?: number;
   totalLastYear?: number;
@@ -54,6 +57,7 @@ interface HkiAnalyticsData {
   completionRate?: number;
 }
 
+// ... (Komponen MetricCard dan CustomTooltip tetap sama) ...
 interface MetricCardProps {
   title: string;
   value: string | number;
@@ -63,21 +67,9 @@ interface MetricCardProps {
   color?: string;
 }
 
-const COLORS = [
-  '#0088FE', '#00C49F', '#FFBB28', '#FF8042', 
-  '#A28DFF', '#FF69B4', '#1E90FF', '#C70039',
-  '#32CD32', '#FF1493', '#00CED1', '#FF4500'
-];
-
-const MetricCard: React.FC<MetricCardProps> = ({ 
-  title, 
-  value, 
-  description, 
-  icon: Icon, 
-  trend, 
-  color = "blue" 
-}) => {
-  const getColorClasses = (color: string) => {
+const MetricCard: React.FC<MetricCardProps> = ({ title, value, description, icon: Icon, trend, color = "blue" }) => {
+    // ... implementasi MetricCard tidak berubah
+    const getColorClasses = (color: string) => {
     const colorMap: { [key: string]: string } = {
       blue: "from-blue-500 to-blue-600 text-blue-700 bg-blue-50",
       green: "from-green-500 to-green-600 text-green-700 bg-green-50",
@@ -134,138 +126,66 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export function HKIAnalyticsCards() {
-  const [analyticsData, setAnalyticsData] = useState<HkiAnalyticsData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const fetchAnalyticsData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const res = await fetch('/api/hki-analytics');
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-      
-      const data: HkiAnalyticsData = await res.json();
-      
-      // Hitung metrics tambahan
-      const totalHki = data.hkiTypeDistribution.reduce((sum, item) => sum + item.Jumlah, 0);
-      const currentYear = new Date().getFullYear();
-      const totalThisYear = data.hkiRegistrationsPerYear.find(item => item["Tahun HKI"] === currentYear)?.Jumlah || 0;
-      const totalLastYear = data.hkiRegistrationsPerYear.find(item => item["Tahun HKI"] === currentYear - 1)?.Jumlah || 0;
-      
-      const averagePerYear = data.hkiRegistrationsPerYear.length > 0 
-        ? Math.round(data.hkiRegistrationsPerYear.reduce((sum, item) => sum + item.Jumlah, 0) / data.hkiRegistrationsPerYear.length)
-        : 0;
-      
-      const mostPopularType = data.hkiTypeDistribution.reduce((max, item) => 
-        item.Jumlah > max.Jumlah ? item : max, data.hkiTypeDistribution[0]
-      );
-      
-      // Hitung jumlah submitted
-      const submittedCount = data.hkiStatusDistribution.find(item => 
+export function HKIAnalyticsCards() {
+  // --- PERUBAHAN: Gunakan hook react-query, hapus useState dan useEffect ---
+  const { data, isLoading, isError, error, refetch, isRefetching } = useGetAnalyticsData();
+
+  // --- PERUBAHAN: Pindahkan logika pemrosesan data ke dalam useMemo ---
+  const analyticsData: ProcessedAnalyticsData | null = useMemo(() => {
+    if (!data) return null;
+
+    // Hitung metrics tambahan
+    const totalHki = data.hkiTypeDistribution.reduce((sum, item) => sum + item.Jumlah, 0);
+    const currentYear = new Date().getFullYear();
+    const totalThisYear = data.hkiRegistrationsPerYear.find(item => item["Tahun HKI"] === currentYear)?.Jumlah || 0;
+    
+    const averagePerYear = data.hkiRegistrationsPerYear.length > 0 
+      ? Math.round(data.hkiRegistrationsPerYear.reduce((sum, item) => sum + item.Jumlah, 0) / data.hkiRegistrationsPerYear.length)
+      : 0;
+    
+    const mostPopularType = data.hkiTypeDistribution.reduce((max, item) => 
+      item.Jumlah > max.Jumlah ? item : max, data.hkiTypeDistribution[0] || { "Jenis HKI": "N/A" }
+    );
+    
+    const submittedCount = data.hkiStatusDistribution.find(item => 
         item.Status.toLowerCase().includes('submitted') || 
         item.Status.toLowerCase().includes('diajukan') ||
         item.Status.toLowerCase().includes('pending')
       )?.Jumlah || 0;
       
-      const completedCount = data.hkiStatusDistribution.find(item => 
-        item.Status.toLowerCase().includes('granted') || 
-        item.Status.toLowerCase().includes('selesai') ||
-        item.Status.toLowerCase().includes('diterima')
-      )?.Jumlah || 0;
-      
-      const completionRate = totalHki > 0 ? Math.round((completedCount / totalHki) * 100) : 0;
-      
-      // Tambahkan percentage untuk pie chart dan filter item dengan count kecil
-      const typeDistributionWithPercentage = data.hkiTypeDistribution
-        .map(item => ({
-          ...item,
-          percentage: totalHki > 0 ? Math.round((item.Jumlah / totalHki) * 100) : 0
-        }))
-        .filter(item => item.Jumlah >= 3) // Hanya tampilkan jika count >= 3
-        .sort((a, b) => b.Jumlah - a.Jumlah); // Urutkan dari yang terbesar
-      
-      const statusDistributionWithPercentage = data.hkiStatusDistribution.map(item => ({
+    const typeDistributionWithPercentage = data.hkiTypeDistribution
+      .map(item => ({
         ...item,
         percentage: totalHki > 0 ? Math.round((item.Jumlah / totalHki) * 100) : 0
-      }));
-      
-      // Hitung growth rate untuk registrasi per tahun
-      const registrationsWithGrowth = data.hkiRegistrationsPerYear.map((item, index) => {
-        if (index === 0) return { ...item, growth: 0 };
-        const prevValue = data.hkiRegistrationsPerYear[index - 1].Jumlah;
-        const growth = prevValue > 0 ? Math.round(((item.Jumlah - prevValue) / prevValue) * 100) : 0;
-        return { ...item, growth };
-      });
-      
-      setAnalyticsData({
-        ...data,
-        hkiTypeDistribution: typeDistributionWithPercentage,
-        hkiStatusDistribution: statusDistributionWithPercentage,
-        hkiRegistrationsPerYear: registrationsWithGrowth,
-        totalHki: submittedCount, // Menggunakan submitted count untuk Total HKI
-        totalThisYear,
-        totalLastYear,
-        averagePerYear,
-        mostPopularType: mostPopularType?.["Jenis HKI"],
-        completionRate
-      });
-    } catch (e: any) {
-      console.error("Error fetching analytics data:", e);
-      setError(e.message || 'Gagal mengambil data analitik.');
-    } finally {
-      setLoading(false);
-    }
-  };
+      }))
+      .filter(item => item.Jumlah >= 3)
+      .sort((a, b) => b.Jumlah - a.Jumlah);
+    
+    return {
+      ...data,
+      hkiTypeDistribution: typeDistributionWithPercentage,
+      totalHki: submittedCount,
+      totalThisYear,
+      averagePerYear,
+      mostPopularType: mostPopularType?.["Jenis HKI"],
+    };
+  }, [data]); // Memo akan dijalankan ulang hanya jika 'data' berubah
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchAnalyticsData();
-    setRefreshing(false);
-  };
-
-  useEffect(() => {
-    fetchAnalyticsData();
-  }, []);
-
-  // Calculated metrics
   const metrics = useMemo(() => {
     if (!analyticsData) return [];
-    
     return [
-      {
-        title: "Total HKI",
-        value: analyticsData.totalHki || 0,
-        description: "Jumlah HKI yang telah disubmit",
-        icon: Send,
-        color: "blue"
-      },
-      {
-        title: "Rata-rata per Tahun",
-        value: analyticsData.averagePerYear || 0,
-        description: "Rata-rata pendaftaran tahunan",
-        icon: Activity,
-        color: "purple"
-      },
-      {
-        title: "Jenis Terpopuler",
-        value: analyticsData.mostPopularType || "N/A",
-        description: "Jenis HKI paling banyak didaftarkan",
-        icon: Award,
-        color: "orange"
-      }
+      { title: "Total HKI", value: analyticsData.totalHki || 0, description: "Jumlah HKI yang telah disubmit", icon: Send, color: "blue" },
+      { title: "Rata-rata per Tahun", value: analyticsData.averagePerYear || 0, description: "Rata-rata pendaftaran tahunan", icon: Activity, color: "purple" },
+      { title: "Jenis Terpopuler", value: analyticsData.mostPopularType || "N/A", description: "Jenis HKI paling banyak didaftarkan", icon: Award, color: "orange" }
     ];
   }, [analyticsData]);
 
-  // Loading state
-  if (loading) {
+  // --- PERUBAHAN: Gunakan isLoading dari react-query ---
+  if (isLoading) {
+    // ... (UI loading state tidak berubah)
     return (
-      <div className="space-y-6">
+        <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h2>
           <div className="flex items-center gap-2">
@@ -304,18 +224,19 @@ export function HKIAnalyticsCards() {
     );
   }
 
-  // Error state
-  if (error) {
-    return (
+  // --- PERUBAHAN: Gunakan isError dan error dari react-query ---
+  if (isError) {
+    // ... (UI error state tidak berubah, hanya ganti 'refreshing' ke 'isRefetching' dan 'handleRefresh' ke 'refetch')
+     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h2>
           <button 
-            onClick={handleRefresh}
-            disabled={refreshing}
+            onClick={() => refetch()}
+            disabled={isRefetching}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
             Refresh
           </button>
         </div>
@@ -326,13 +247,13 @@ export function HKIAnalyticsCards() {
               <AlertCircle className="h-5 w-5" />
               <span className="font-medium">Error Memuat Data Analytics</span>
             </div>
-            <p className="text-red-700 text-sm mb-4">{error}</p>
+            <p className="text-red-700 text-sm mb-4">{error.message}</p>
             <button 
-              onClick={handleRefresh}
-              disabled={refreshing}
+              onClick={() => refetch()}
+              disabled={isRefetching}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
             >
-              {refreshing ? 'Mencoba lagi...' : 'Coba Lagi'}
+              {isRefetching ? 'Mencoba lagi...' : 'Coba Lagi'}
             </button>
           </CardContent>
         </Card>
@@ -340,18 +261,18 @@ export function HKIAnalyticsCards() {
     );
   }
 
-  // No data state
+  // ... (UI No data state dan UI utama tidak berubah, hanya ganti 'refreshing' ke 'isRefetching' dan 'handleRefresh' ke 'refetch')
   if (!analyticsData || !analyticsData.totalHki) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h2>
           <button 
-            onClick={handleRefresh}
-            disabled={refreshing}
+            onClick={() => refetch()}
+            disabled={isRefetching}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
             Refresh
           </button>
         </div>
@@ -368,7 +289,7 @@ export function HKIAnalyticsCards() {
               Pastikan spreadsheet Anda memiliki data HKI yang valid untuk menampilkan analytics dashboard.
             </p>
             <button 
-              onClick={handleRefresh}
+              onClick={() => refetch()}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Periksa Ulang Data
@@ -388,11 +309,11 @@ export function HKIAnalyticsCards() {
         </div>
         <div className="flex items-center gap-2">
           <Button 
-            onClick={handleRefresh}
-            disabled={refreshing}
+            onClick={() => refetch()}
+            disabled={isRefetching}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
         </div>

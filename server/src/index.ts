@@ -7,6 +7,7 @@ import authRoutes from './routes/auth.routes';
 import pendaftaranRoutes from './routes/pendaftaran.routes';
 import adminRoutes from './routes/admin.routes';
 import userRoutes from "./routes/user.routes";
+import analyticsRoutes from './routes/analytics.routes';
 
 const app: Express = express();
 const port = process.env.PORT || 8000;
@@ -30,6 +31,7 @@ app.use('/api/admin', adminRoutes);
 
 // Gunakan router pengguna dengan prefix /api/user
 app.use('/api/user', userRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 app.listen(port, () => {
   console.log(`🚀 Server berjalan di http://localhost:${port}`);
