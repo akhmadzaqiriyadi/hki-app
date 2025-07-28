@@ -41,6 +41,10 @@ model User {
   // Relasi: Satu pengguna bisa memiliki banyak pendaftaran
   pendaftaran Pendaftaran[]
 
+    // Tambahkan kolom berikut untuk reset password
+  resetPasswordToken       String?
+  resetPasswordExpires     DateTime?
+
   @@map("users")
 }
 

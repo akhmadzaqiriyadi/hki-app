@@ -1,4 +1,5 @@
 "use strict";
+// server/src/middleware/auth.middleware.ts
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -8,16 +9,18 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const protect = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ message: 'Akses ditolak, tidak ada token' });
+        return res.status(401).json({ message: 'Akses ditolak, token tidak tersedia atau format salah' });
     }
     const token = authHeader.split(' ')[1];
     try {
+        // Verifikasi token dan pastikan tipenya adalah TokenPayload
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
-        req.user = decoded; // Simpan data user di object request
-        next(); // Lanjutkan ke controller
+        // Simpan seluruh payload yang sudah didekode ke req.user
+        req.user = decoded;
+        next(); // Lanjutkan ke middleware atau controller berikutnya
     }
     catch (error) {
-        return res.status(401).json({ message: 'Token tidak valid' });
+        return res.status(401).json({ message: 'Token tidak valid atau kedaluwarsa' });
     }
 };
 exports.protect = protect;

@@ -2,7 +2,6 @@
 
 import { useGetAllRegistrationsForAdmin } from "@/queries/queries/useGetAllRegistrationsForAdmin";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { 
   Users, 
   FileText, 
@@ -10,10 +9,8 @@ import {
   AlertCircle, 
   Activity, 
   Eye, 
-  CheckCircle,
   Loader2,
   TrendingUp,
-  Calendar,
   Shield,
   ArrowRight,
   FileCheck,

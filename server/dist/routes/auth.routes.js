@@ -8,4 +8,7 @@ const router = (0, express_1.Router)();
 router.post('/register', auth_controller_1.register);
 // --- ENDPOINT BARU UNTUK LOGIN ---
 router.post('/login', auth_controller_1.login);
+// --- ENDPOINT BARU UNTUK FORGOT & RESET PASSWORD ---
+router.post('/forgot-password', auth_controller_1.forgotPassword);
+router.put('/reset-password/:token', auth_controller_1.resetPassword);
 exports.default = router;

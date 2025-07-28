@@ -79,17 +79,30 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const { data: pendaftaran, isLoading } = useGetMyRegistrations();
 
-  const stats = React.useMemo(() => {
-    if (!pendaftaran) return { total: 0, approved: 0, inProgress: 0, revision: 0 };
+  // Pendaftaran dianggap ada setelah disubmit (bukan 'draft').
+  // Filter pendaftaran dan hitung statistik dalam satu memoized block.
+  const { stats, recentRegistrations } = React.useMemo(() => {
+    if (!pendaftaran) {
+      return {
+        stats: { total: 0, approved: 0, inProgress: 0, revision: 0 },
+        recentRegistrations: [],
+      };
+    }
+
+    const submitted = pendaftaran.filter(p => p.status !== 'draft');
+
+    const calculatedStats = {
+      total: submitted.length,
+      approved: submitted.filter(p => p.status === "approved" || p.status === "granted").length,
+      inProgress: submitted.filter(p => p.status === "submitted" || p.status === "review" || p.status === "submitted_to_djki" || p.status === "diproses_hki").length,
+      revision: submitted.filter(p => p.status === "revisi").length,
+    };
+
     return {
-      total: pendaftaran.length,
-      approved: pendaftaran.filter(p => p.status === "approved" || p.status === "granted").length,
-      inProgress: pendaftaran.filter(p => p.status === "submitted" || p.status === "review" || p.status === "submitted_to_djki" || p.status === "diproses_hki").length,
-      revision: pendaftaran.filter(p => p.status === "revisi").length,
+      stats: calculatedStats,
+      recentRegistrations: submitted.slice(0, 10),
     };
   }, [pendaftaran]);
-  
-  const recentRegistrations = pendaftaran?.slice(0, 10) || [];
 
   if (isLoading) {
     return (
@@ -238,7 +251,7 @@ export default function DashboardPage() {
               </Button>
             </CardHeader>
             <CardContent>
-              {recentRegistrations && recentRegistrations.length > 0 ? (
+              {recentRegistrations.length > 0 ? (
                 <div className="rounded-xl border border-blue-200/50 bg-white/80 backdrop-blur-sm overflow-hidden">
                   <Table>
                     <TableHeader>
