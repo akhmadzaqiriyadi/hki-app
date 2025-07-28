@@ -1,4 +1,3 @@
-// src/app/(dashboard)/pendaftaran/edit/[id]/page.tsx
 "use client";
 
 import React from 'react';
@@ -6,9 +5,9 @@ import { useParams } from 'next/navigation';
 import { useGetRegistrationById } from '@/queries/queries/useGetRegistrationById';
 import PendaftaranForm from '@/components/features/pendaftaran/PendaftaranForm';
 import { Loader2, AlertCircle } from 'lucide-react';
-import FormPageHeader from '@/components/features/pendaftaran/FormPageHeader'; // <-- Impor komponen baru
+import FormPageHeader from '@/components/features/pendaftaran/FormPageHeader';
 
-export default function EditPendaftaranPage() {
+export default function CreatePendaftaranPage() {
   const params = useParams();
   const id = params.id as string;
   const { data: pendaftaran, isLoading, isError, error } = useGetRegistrationById(id);
@@ -21,16 +20,11 @@ export default function EditPendaftaranPage() {
     return <div className="text-red-600 p-8 text-center"><AlertCircle className="mx-auto mb-2 h-8 w-8" /> Terjadi kesalahan: {error.message}</div>;
   }
 
-  if (pendaftaran && pendaftaran.status !== 'draft' && pendaftaran.status !== 'revisi') {
-     return <div className="text-amber-600 p-8 text-center"><AlertCircle className="mx-auto mb-2 h-8 w-8" /> Pendaftaran ini sudah tidak bisa diedit karena statusnya adalah "{pendaftaran.status}".</div>;
-  }
-
   return (
     <div className="space-y-6">
-      {/* Menggunakan komponen header baru */}
       <FormPageHeader 
-        title="Edit Form Pendaftaran HKI"
-        description={`Lanjutkan pengisian draf untuk karya "${pendaftaran?.judul || 'Tanpa Judul'}"`}
+        title="Form Pendaftaran HKI"
+        description="Lengkapi informasi berikut untuk mendaftarkan karya Anda"
       />
       {pendaftaran && <PendaftaranForm pendaftaran={pendaftaran} />}
     </div>

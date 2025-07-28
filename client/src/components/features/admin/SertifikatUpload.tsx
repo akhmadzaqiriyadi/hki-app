@@ -29,17 +29,17 @@ export function SertifikatUpload({ pendaftaranId }: { pendaftaranId: string }) {
     };
 
     return (
-        <Card>
+        <Card className="border-green-200/50 bg-gradient-to-br from-green-50/80 to-white backdrop-blur-sm shadow-xl">
             <CardHeader>
-                <CardTitle>Unggah Sertifikat</CardTitle>
-                <CardDescription>Unggah sertifikat di sini untuk menyelesaikan proses. Status akan otomatis berubah menjadi "Granted".</CardDescription>
+                <CardTitle className="text-xl font-bold text-green-800">Unggah Sertifikat</CardTitle>
+                <CardDescription className="text-base text-green-700 font-medium">Status akan otomatis berubah menjadi "Granted" setelah diunggah.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="space-y-2">
-                    <Label htmlFor="sertifikat">File Sertifikat (PDF)</Label>
-                    <Input id="sertifikat" type="file" accept=".pdf" onChange={handleFileChange} />
+                    <Label htmlFor="sertifikat" className="font-semibold">File Sertifikat (PDF)</Label>
+                    <Input id="sertifikat" type="file" accept=".pdf" onChange={handleFileChange} className="border-green-200/50 bg-white/80" />
                 </div>
-                <Button onClick={handleUpload} disabled={!file || uploadMutation.isPending} className="w-full">
+                <Button onClick={handleUpload} disabled={!file || uploadMutation.isPending} className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-xl">
                     {uploadMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}
                     Unggah dan Selesaikan
                 </Button>

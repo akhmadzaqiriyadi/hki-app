@@ -4,7 +4,6 @@ import { Pendaftaran } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-// Fungsi ini sekarang memanggil API untuk membuat draf
 const createDraftRegistration = async (): Promise<Pendaftaran> => {
   return apiClient<Pendaftaran>("/pendaftaran", {
     method: "POST",
@@ -19,10 +18,9 @@ export const useCreateDraftRegistration = () => {
     mutationFn: createDraftRegistration,
     onSuccess: (data) => {
       toast.success("Draf baru berhasil dibuat!");
-      // Invalidate query agar daftar pendaftaran otomatis refresh
       queryClient.invalidateQueries({ queryKey: ["myRegistrations"] });
-      // Redirect ke halaman edit untuk draf yang baru dibuat
-      router.push(`/dashboard/pendaftaran/edit/${data.id}`);
+      // Arahkan ke halaman create yang baru dengan ID draf
+      router.push(`/dashboard/pendaftaran/create/${data.id}`);
     },
     onError: (error) => {
       toast.error("Gagal membuat draf", {

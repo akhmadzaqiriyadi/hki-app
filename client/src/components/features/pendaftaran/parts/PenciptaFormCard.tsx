@@ -5,15 +5,22 @@ import { useFormContext } from "react-hook-form";
 import {
   Trash2,
   User,
+  Contact,
   MapPin,
-  Phone,
-  Mail,
   GraduationCap,
-  Globe,
+  Briefcase,
 } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 import { FormValues } from "@/lib/pendaftaran/schema";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   FormControl,
   FormField,
@@ -22,7 +29,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -30,7 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 
 const programStudiUTY = [
   "Informatika - S1",
@@ -59,6 +65,7 @@ const programStudiUTY = [
 interface PenciptaFormCardProps {
   index: number;
   onRemove: (index: number) => void;
+  isOnlyOne: boolean;
   provinces: any[];
   cities: any[];
   districts: any[];
@@ -68,9 +75,13 @@ interface PenciptaFormCardProps {
   setVillagesForIndex: (villages: any[]) => void;
 }
 
+const formInputStyle =
+  "border-blue-200/50 focus:border-blue-400 focus:ring-blue-400/20 bg-white/80 backdrop-blur-sm";
+
 export function PenciptaFormCard({
   index,
   onRemove,
+  isOnlyOne,
   provinces,
   cities,
   districts,
@@ -90,6 +101,10 @@ export function PenciptaFormCard({
   const getCities = async (provinceId: string) => {
     if (!provinceId) return;
     setIsLoading((prev) => ({ ...prev, cities: true }));
+    setValue(`pencipta.${index}.kota`, "");
+    setValue(`pencipta.${index}.kecamatan`, "");
+    setValue(`pencipta.${index}.kelurahan`, "");
+    setCitiesForIndex([]);
     setDistrictsForIndex([]);
     setVillagesForIndex([]);
     try {
@@ -109,6 +124,9 @@ export function PenciptaFormCard({
   const getDistricts = async (cityId: string) => {
     if (!cityId) return;
     setIsLoading((prev) => ({ ...prev, districts: true }));
+    setValue(`pencipta.${index}.kecamatan`, "");
+    setValue(`pencipta.${index}.kelurahan`, "");
+    setDistrictsForIndex([]);
     setVillagesForIndex([]);
     try {
       const response = await fetch(
@@ -127,6 +145,8 @@ export function PenciptaFormCard({
   const getVillages = async (districtId: string) => {
     if (!districtId) return;
     setIsLoading((prev) => ({ ...prev, villages: true }));
+    setValue(`pencipta.${index}.kelurahan`, "");
+    setVillagesForIndex([]);
     try {
       const response = await fetch(
         `https://api.binderbyte.com/wilayah/kelurahan?api_key=${API_KEY}&id_kecamatan=${districtId}`
@@ -141,87 +161,74 @@ export function PenciptaFormCard({
     }
   };
 
+
   return (
-    <Card className="border-blue-200/50 bg-gradient-to-br from-white to-blue-50/30 backdrop-blur-sm shadow-lg">
-      <CardHeader>
-        <CardTitle className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <User className="h-6 w-6 text-blue-800" />
-            <span>Pencipta {index + 1}</span>
-          </div>
-          {index > 0 && (
-            <Button
-              variant="destructive"
-              size="icon"
-              onClick={() => onRemove(index)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+    <Card className="border-blue-200/50 bg-white/70 backdrop-blur-sm shadow-lg">
+      <CardHeader className="flex flex-row justify-between items-start">
+        <div>
+          <CardTitle className="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-3">
+            <User className="h-5 w-5" />
+            Pencipta {index + 1}
+          </CardTitle>
+          {index === 0 && (
+            <CardDescription className="text-xs sm:text-sm text-slate-600 mt-1">
+              Koordinator
+            </CardDescription>
           )}
-        </CardTitle>
+        </div>
+        {!isOnlyOne && (
+          <Button
+            variant="destructive"
+            size="icon"
+            onClick={() => onRemove(index)}
+            className="flex-shrink-0"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* All FormFields go here, the code is long so I will omit it for brevity, but your existing code is correct */}
-        {/* Personal Information */}
+      <CardContent className="space-y-8">
+        {/* Informasi Personal */}
         <div className="space-y-4">
-          <h3 className="font-semibold border-b pb-2">Informasi Personal</h3>
+          <div className="flex items-center gap-2 text-slate-700 font-semibold border-b border-blue-100 pb-2">
+            <Briefcase className="h-4 w-4 text-blue-700" />
+            <span className="text-sm sm:text-base">Identitas Diri</span>
+          </div>
           <FormField
             control={control}
             name={`pencipta.${index}.nama_lengkap`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nama Lengkap</FormLabel>
+                <FormLabel className="text-slate-700 font-semibold">
+                  Nama Lengkap (Sesuai KTP)
+                </FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input
+                    placeholder="Contoh: Budi Sanjaya"
+                    {...field}
+                    className={formInputStyle}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               control={control}
               name={`pencipta.${index}.nik`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>NIK</FormLabel>
+                  <FormLabel className="text-slate-700 font-semibold">
+                    NIK
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input
+                      placeholder="340xxxxxxxxxxxxx"
+                      {...field}
+                      className={formInputStyle}
+                    />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={control}
-              name={`pencipta.${index}.nip_nim`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>NIP/NIM/NUPTK/NPM</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={control}
-              name={`pencipta.${index}.jenis_kelamin`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Jenis Kelamin</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih..." />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Laki-laki">Laki-laki</SelectItem>
-                      <SelectItem value="Perempuan">Perempuan</SelectItem>
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -231,9 +238,15 @@ export function PenciptaFormCard({
               name={`pencipta.${index}.kewarganegaraan`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Kewarganegaraan</FormLabel>
+                  <FormLabel className="text-slate-700 font-semibold">
+                    Kewarganegaraan
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input
+                      placeholder="Indonesia"
+                      {...field}
+                      className={formInputStyle}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -242,18 +255,28 @@ export function PenciptaFormCard({
           </div>
         </div>
 
-        {/* Contact Information */}
+        {/* Informasi Kontak */}
         <div className="space-y-4">
-          <h3 className="font-semibold border-b pb-2">Informasi Kontak</h3>
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="flex items-center gap-2 text-slate-700 font-semibold border-b border-blue-100 pb-2">
+            <Contact className="h-4 w-4 text-blue-700" />
+            <span className="text-sm sm:text-base">Informasi Kontak</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               control={control}
               name={`pencipta.${index}.email`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel className="text-slate-700 font-semibold">
+                    Email Aktif
+                  </FormLabel>
                   <FormControl>
-                    <Input type="email" {...field} />
+                    <Input
+                      type="email"
+                      placeholder="budi.sanjaya@example.com"
+                      {...field}
+                      className={formInputStyle}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -264,9 +287,15 @@ export function PenciptaFormCard({
               name={`pencipta.${index}.no_hp`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>No. HP</FormLabel>
+                  <FormLabel className="text-slate-700 font-semibold">
+                    No. HP (WhatsApp)
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input
+                      placeholder="0812xxxxxxxx"
+                      {...field}
+                      className={formInputStyle}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -275,20 +304,29 @@ export function PenciptaFormCard({
           </div>
         </div>
 
-        {/* Academic Information */}
+        {/* Informasi Akademik (Opsional) */}
         <div className="space-y-4">
-          <h3 className="font-semibold border-b pb-2">
-            Informasi Akademik (Opsional, khusus civitas UTY)
-          </h3>
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="flex items-center gap-2 text-slate-700 font-semibold border-b border-blue-100 pb-2">
+            <GraduationCap className="h-4 w-4 text-blue-700" />
+            <span className="text-sm sm:text-base">
+              Informasi Akademik (Khusus civitas UTY)
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               control={control}
-              name={`pencipta.${index}.fakultas`}
+              name={`pencipta.${index}.nip_nim`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Fakultas</FormLabel>
+                  <FormLabel className="text-slate-700 font-semibold">
+                    NIP/NIM
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input
+                      placeholder="NIP atau NIM..."
+                      {...field}
+                      className={formInputStyle}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -299,10 +337,12 @@ export function PenciptaFormCard({
               name={`pencipta.${index}.program_studi`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Program Studi</FormLabel>
+                  <FormLabel className="text-slate-700 font-semibold">
+                    Program Studi
+                  </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className={formInputStyle}>
                         <SelectValue placeholder="Pilih prodi..." />
                       </SelectTrigger>
                     </FormControl>
@@ -321,16 +361,22 @@ export function PenciptaFormCard({
           </div>
         </div>
 
-        {/* Address Information */}
+        {/* Alamat Sesuai KTP */}
         <div className="space-y-4">
-          <h3 className="font-semibold border-b pb-2">Alamat Sesuai KTP</h3>
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="flex items-center gap-2 text-slate-700 font-semibold border-b border-blue-100 pb-2">
+            <MapPin className="h-4 w-4 text-blue-700" />
+            <span className="text-sm sm:text-base">Alamat Sesuai KTP</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Provinsi */}
             <FormField
               control={control}
               name={`pencipta.${index}.provinsi`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Provinsi</FormLabel>
+                  <FormLabel className="text-slate-700 font-semibold">
+                    Provinsi
+                  </FormLabel>
                   <Select
                     onValueChange={(v) => {
                       field.onChange(v);
@@ -339,7 +385,7 @@ export function PenciptaFormCard({
                     value={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className={formInputStyle}>
                         <SelectValue placeholder="Pilih provinsi..." />
                       </SelectTrigger>
                     </FormControl>
@@ -355,12 +401,15 @@ export function PenciptaFormCard({
                 </FormItem>
               )}
             />
+            {/* Kota/Kabupaten */}
             <FormField
               control={control}
               name={`pencipta.${index}.kota`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Kota/Kabupaten</FormLabel>
+                  <FormLabel className="text-slate-700 font-semibold">
+                    Kota/Kabupaten
+                  </FormLabel>
                   <Select
                     onValueChange={(v) => {
                       field.onChange(v);
@@ -370,7 +419,13 @@ export function PenciptaFormCard({
                     disabled={isLoading.cities || cities.length === 0}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger
+                        className={cn(
+                          formInputStyle,
+                          (isLoading.cities || cities.length === 0) &&
+                            "opacity-60 cursor-not-allowed"
+                        )}
+                      >
                         <SelectValue
                           placeholder={
                             isLoading.cities ? "Memuat..." : "Pilih kota..."
@@ -390,12 +445,13 @@ export function PenciptaFormCard({
                 </FormItem>
               )}
             />
-            <FormField
+            {/* Kecamatan */}
+             <FormField
               control={control}
               name={`pencipta.${index}.kecamatan`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Kecamatan</FormLabel>
+                  <FormLabel className="text-slate-700 font-semibold">Kecamatan</FormLabel>
                   <Select
                     onValueChange={(v) => {
                       field.onChange(v);
@@ -405,7 +461,11 @@ export function PenciptaFormCard({
                     disabled={isLoading.districts || districts.length === 0}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className={cn(
+                          formInputStyle,
+                          (isLoading.districts || districts.length === 0) &&
+                            "opacity-60 cursor-not-allowed"
+                        )}>
                         <SelectValue
                           placeholder={
                             isLoading.districts
@@ -427,19 +487,24 @@ export function PenciptaFormCard({
                 </FormItem>
               )}
             />
+            {/* Kelurahan */}
             <FormField
               control={control}
               name={`pencipta.${index}.kelurahan`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Kelurahan/Desa</FormLabel>
+                  <FormLabel className="text-slate-700 font-semibold">Kelurahan/Desa</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
                     disabled={isLoading.villages || villages.length === 0}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className={cn(
+                          formInputStyle,
+                          (isLoading.villages || villages.length === 0) &&
+                            "opacity-60 cursor-not-allowed"
+                        )}>
                         <SelectValue
                           placeholder={
                             isLoading.villages
@@ -467,9 +532,15 @@ export function PenciptaFormCard({
             name={`pencipta.${index}.alamat_lengkap`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Alamat Lengkap</FormLabel>
+                <FormLabel className="text-slate-700 font-semibold">
+                  Nama Jalan, Gedung, RT/RW
+                </FormLabel>
                 <FormControl>
-                  <Textarea {...field} />
+                  <Textarea
+                    placeholder="Contoh: Jl. Ringroad Utara, Jombor, No. 12, RT 01/RW 02"
+                    {...field}
+                    className={cn(formInputStyle, "min-h-[100px] resize-none")}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -479,13 +550,13 @@ export function PenciptaFormCard({
             control={control}
             name={`pencipta.${index}.kode_pos`}
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Kode Pos</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+                <FormItem>
+                  <FormLabel className="text-slate-700 font-semibold">Kode Pos</FormLabel>
+                  <FormControl>
+                    <Input {...field} className={formInputStyle} placeholder="Contoh: 55284"/>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
             )}
           />
         </div>

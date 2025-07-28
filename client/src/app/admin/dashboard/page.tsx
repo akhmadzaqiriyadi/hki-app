@@ -14,12 +14,11 @@ import {
   Loader2,
   TrendingUp,
   Calendar,
-  UserCheck,
+  Shield,
+  ArrowRight,
   FileCheck,
   FileClock,
   FileX,
-  ArrowRight,
-  Shield
 } from "lucide-react";
 import React from "react";
 import { Pendaftaran, StatusPendaftaran } from "@/lib/types";
@@ -65,40 +64,17 @@ export default function AdminDashboardPage() {
 
   const stats = React.useMemo(() => {
     if (!pendaftaran) {
-      return { 
-        total: 0, 
-        users: 0, 
-        inProgress: 0, 
-        revision: 0, 
-        granted: 0,
-        approved: 0,
-        rejected: 0,
-        submitted: 0,
-        newThisWeek: 0,
-        completionRate: 0
-      };
+      return { total: 0, users: 0, inProgress: 0, revision: 0, granted: 0, approved: 0, rejected: 0, submitted: 0, newThisWeek: 0, completionRate: 0 };
     }
-
     const uniqueUsers = new Set(pendaftaran.map(p => p.userId));
     const oneWeekAgo = subDays(new Date(), 7);
-    const newThisWeek = pendaftaran.filter(p => 
-      p.createdAt && isAfter(new Date(p.createdAt), oneWeekAgo)
-    ).length;
-
-    const completed = pendaftaran.filter(p => 
-      p.status === "granted" || p.status === "approved"
-    ).length;
-    
-    const completionRate = pendaftaran.length > 0 
-      ? Math.round((completed / pendaftaran.length) * 100) 
-      : 0;
-
+    const newThisWeek = pendaftaran.filter(p => p.createdAt && isAfter(new Date(p.createdAt), oneWeekAgo)).length;
+    const completed = pendaftaran.filter(p => p.status === "granted" || p.status === "approved").length;
+    const completionRate = pendaftaran.length > 0 ? Math.round((completed / pendaftaran.length) * 100) : 0;
     return {
       total: pendaftaran.length,
       users: uniqueUsers.size,
-      inProgress: pendaftaran.filter(p => 
-        p.status === "submitted" || p.status === "review" || p.status === "submitted_to_djki" || p.status === "diproses_hki"
-      ).length,
+      inProgress: pendaftaran.filter(p => ["submitted", "review", "submitted_to_djki", "diproses_hki"].includes(p.status)).length,
       revision: pendaftaran.filter(p => p.status === "revisi").length,
       granted: pendaftaran.filter(p => p.status === "granted").length,
       approved: pendaftaran.filter(p => p.status === "approved").length,
@@ -109,363 +85,179 @@ export default function AdminDashboardPage() {
     };
   }, [pendaftaran]);
 
-  const recentRegistrations = pendaftaran?.slice(0, 8) || [];
-  const urgentReviews = pendaftaran?.filter(p => 
-    p.status === "submitted" || p.status === "revisi"
-  ).slice(0, 5) || [];
+  const recentRegistrations = pendaftaran?.slice(0, 5) || [];
 
   if (isLoading) {
-    return (
-      <div className="space-y-8">
-        <div className="space-y-2">
-          <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-          <div className="h-4 w-64 bg-muted animate-pulse rounded" />
-        </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-              </CardHeader>
-              <CardContent>
-                <div className="h-8 w-16 bg-muted animate-pulse rounded" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
+    // ... Loading state can be improved later if needed
+    return <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header Section */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-3">
-          <div className="rounded-full bg-primary/10 p-2">
-            <Shield className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight">Admin Dashboard</h1>
-            <p className="text-lg text-muted-foreground">
-              Kelola dan pantau semua pendaftaran HKI dari seluruh pengguna
-            </p>
-          </div>
+    <div className="relative min-h-screen">
+      {/* Background decorations */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-20 -right-20 w-96 h-96 bg-blue-800/5 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-40 -left-20 w-80 h-80 bg-blue-900/5 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-2000"></div>
+      </div>
+
+      <div className="relative space-y-8">
+        {/* Header Section */}
+        <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-900 to-blue-800 rounded-xl sm:rounded-2xl items-center justify-center shadow-xl flex-shrink-0">
+                <Shield className="h-6 w-6 sm:h-8  text-white" />
+            </div>
+            <div>
+                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-900 via-blue-800 to-slate-700 bg-clip-text text-transparent">
+                    Admin Dashboard
+                </h1>
+                <p className="text-base text-slate-600 font-medium">
+                    Kelola dan pantau semua pendaftaran HKI dari seluruh pengguna.
+                </p>
+            </div>
         </div>
-      </div>
 
-      <Separator />
+        {/* Main Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+          <Card className="relative overflow-hidden border-blue-200/50 bg-gradient-to-br from-blue-50/80 to-white backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+             <CardContent className="p-3 sm:p-4 md:p-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-xs sm:text-sm font-medium text-slate-600 mb-1">Total Pendaftaran</p>
+                        <p className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900">{stats.total}</p>
+                    </div>
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-900 to-blue-800 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg">
+                        <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                    </div>
+                </div>
+                <p className="text-xs text-slate-500 mt-2">{stats.newThisWeek} baru minggu ini</p>
+             </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden border-green-200/50 bg-gradient-to-br from-green-50/80 to-white backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+             <CardContent className="p-3 sm:p-4 md:p-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-xs sm:text-sm font-medium text-slate-600 mb-1">Pengguna Terdaftar</p>
+                        <p className="text-xl sm:text-2xl md:text-3xl font-bold text-green-700">{stats.users}</p>
+                    </div>
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg">
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                    </div>
+                </div>
+                <p className="text-xs text-slate-500 mt-2">Total pengguna aktif</p>
+             </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden border-amber-200/50 bg-gradient-to-br from-amber-50/80 to-white backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+             <CardContent className="p-3 sm:p-4 md:p-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-xs sm:text-sm font-medium text-slate-600 mb-1">Menunggu Review</p>
+                        <p className="text-xl sm:text-2xl md:text-3xl font-bold text-amber-700">{stats.inProgress}</p>
+                    </div>
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-br from-amber-600 to-amber-700 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg">
+                        <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                    </div>
+                </div>
+                 <p className="text-xs text-slate-500 mt-2">Perlu perhatian segera</p>
+             </CardContent>
+          </Card>
+           <Card className="relative overflow-hidden border-purple-200/50 bg-gradient-to-br from-purple-50/80 to-white backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+             <CardContent className="p-3 sm:p-4 md:p-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-xs sm:text-sm font-medium text-slate-600 mb-1">Tingkat Keberhasilan</p>
+                        <p className="text-xl sm:text-2xl md:text-3xl font-bold text-purple-700">{stats.completionRate}%</p>
+                    </div>
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg">
+                        <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                    </div>
+                </div>
+                <p className="text-xs text-slate-500 mt-2">Dari semua pendaftaran</p>
+             </CardContent>
+          </Card>
+        </div>
 
-      {/* Main Stats Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="relative overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Pendaftaran
-            </CardTitle>
-            <div className="rounded-full bg-blue-100 p-2 dark:bg-blue-900">
-              <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {stats.newThisWeek} baru minggu ini
-            </p>
-          </CardContent>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-blue-600" />
-        </Card>
-
-        <Card className="relative overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pengguna Aktif
-            </CardTitle>
-            <div className="rounded-full bg-green-100 p-2 dark:bg-green-900">
-              <Users className="h-4 w-4 text-green-600 dark:text-green-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-600">{stats.users}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Pengguna terdaftar
-            </p>
-          </CardContent>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-green-600" />
-        </Card>
-
-        <Card className="relative overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Menunggu Review
-            </CardTitle>
-            <div className="rounded-full bg-yellow-100 p-2 dark:bg-yellow-900">
-              <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-yellow-600">{stats.inProgress}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Perlu perhatian segera
-            </p>
-          </CardContent>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-500 to-yellow-600" />
-        </Card>
-
-        <Card className="relative overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Tingkat Keberhasilan
-            </CardTitle>
-            <div className="rounded-full bg-purple-100 p-2 dark:bg-purple-900">
-              <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-purple-600">{stats.completionRate}%</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Dari semua pendaftaran
-            </p>
-          </CardContent>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-purple-600" />
-        </Card>
-      </div>
-
-      {/* Secondary Stats Grid */}
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-5">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Submitted</CardTitle>
-            <FileClock className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{stats.submitted}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Approved</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Granted</CardTitle>
-            <FileCheck className="h-4 w-4 text-emerald-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">{stats.granted}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Needs Revision</CardTitle>
-            <AlertCircle className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.revision}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Rejected</CardTitle>
-            <FileX className="h-4 w-4 text-gray-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-600">{stats.rejected}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Content Grid */}
-      <div className="grid gap-8 lg:grid-cols-3">
-        {/* Recent Activity */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  Aktivitas Terbaru
+        {/* Content Grid */}
+        <div className="grid gap-8 lg:grid-cols-3">
+          {/* Recent Activity */}
+          <Card className="lg:col-span-2 border-blue-200/50 bg-gradient-to-br from-white to-blue-50/30 backdrop-blur-sm shadow-xl">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0 pb-4">
+              <div>
+                <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Aktivitas Terbaru
                 </CardTitle>
-                <CardDescription>
-                  8 pendaftaran terakhir dari semua pengguna
+                <CardDescription className="text-base text-slate-600 font-medium">
+                  Beberapa pendaftaran terakhir dari semua pengguna.
                 </CardDescription>
               </div>
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" size="sm" className="border-blue-200 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all">
                 <Link href="/admin/pendaftaran" className="flex items-center gap-2">
-                  Lihat Semua
-                  <ArrowRight className="h-4 w-4" />
+                  Lihat Semua Pendaftaran <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            {recentRegistrations.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="pl-6">Judul Karya</TableHead>
-                    <TableHead>Pemohon</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Tanggal
-                      </div>
-                    </TableHead>
-                    <TableHead className="text-right pr-6">Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentRegistrations.map((item) => (
-                    <TableRow key={item.id} className="hover:bg-muted/50">
-                      <TableCell className="font-medium pl-6">
-                        <div className="space-y-1">
-                          <p className="font-medium leading-none">{item.judul}</p>
-                          <p className="text-xs text-muted-foreground">ID: {item.id}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <UserCheck className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">
-                            {item.user?.nama_lengkap || 'N/A'}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={getStatusVariant(item.status)} 
-                          className="font-medium"
-                        >
-                          {getStatusLabel(item.status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {item.createdAt 
-                          ? format(new Date(item.createdAt), 'dd MMM yyyy', { locale: localeID })
-                          : '-'
-                        }
-                      </TableCell>
-                      <TableCell className="text-right pr-6">
-                        <Button asChild variant="ghost" size="sm">
-                          <Link href={`/admin/pendaftaran/${item.id}`} className="flex items-center gap-2">
-                            <Eye className="h-4 w-4" />
-                            Review
-                          </Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center space-y-3">
-                  <Activity className="h-12 w-12 text-muted-foreground mx-auto" />
-                  <p className="text-sm text-muted-foreground">
-                    Belum ada aktivitas pendaftaran
-                  </p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Priority Actions */}
-        <div className="space-y-6">
-          {/* System Overview */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-blue-500" />
-                Ringkasan Sistem
-              </CardTitle>
-              <CardDescription>
-                Statistik performa dan aktivitas sistem
-              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Tingkat Persetujuan</span>
-                  <span className="text-sm text-muted-foreground">{stats.completionRate}%</span>
-                </div>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div 
-                    className="bg-green-500 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${stats.completionRate}%` }}
-                  />
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                {[
-                  { label: "Rata-rata per Hari", value: Math.round(stats.total / 30), color: "text-blue-600" },
-                  { label: "Pending Review", value: stats.inProgress, color: "text-yellow-600" },
-                  { label: "Berhasil Disetujui", value: stats.approved + stats.granted, color: "text-green-600" }
-                ].map((item, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">{item.label}</span>
-                    <span className={`text-sm font-medium ${item.color}`}>{item.value}</span>
-                  </div>
-                ))}
-              </div>
-
-              <Separator />
-
-              <div className="pt-2">
-                <Button asChild variant="outline" size="sm" className="w-full">
-                  <Link href="/admin/reports" className="flex items-center gap-2">
-                    <Activity className="h-4 w-4" />
-                    Lihat Laporan Detail
-                  </Link>
-                </Button>
-              </div>
+            <CardContent>
+                {recentRegistrations.length > 0 ? (
+                    <div className="rounded-xl border border-blue-200/50 bg-white/80 backdrop-blur-sm overflow-hidden">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="bg-gradient-to-r from-blue-50/80 to-slate-50/50 border-b-blue-200/30">
+                                    <TableHead className="font-semibold text-slate-700">Judul Karya</TableHead>
+                                    <TableHead className="font-semibold text-slate-700">Pemohon</TableHead>
+                                    <TableHead className="font-semibold text-slate-700">Status</TableHead>
+                                    <TableHead className="text-center font-semibold text-slate-700">Aksi</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                            {recentRegistrations.map((item) => (
+                                <TableRow key={item.id} className="hover:bg-blue-50/50">
+                                    <TableCell className="font-semibold text-slate-800">{item.judul}</TableCell>
+                                    <TableCell className="text-slate-600">{item.user?.nama_lengkap || 'N/A'}</TableCell>
+                                    <TableCell><Badge variant={getStatusVariant(item.status)}>{getStatusLabel(item.status)}</Badge></TableCell>
+                                    <TableCell className="text-center">
+                                        <Button asChild variant="ghost" size="sm">
+                                            <Link href={`/admin/pendaftaran/${item.id}`}><Eye className="mr-2 h-4 w-4" />Review</Link>
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                ) : (
+                    <div className="text-center py-12">
+                        <p className="text-muted-foreground">Belum ada aktivitas pendaftaran.</p>
+                    </div>
+                )}
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Aksi Cepat</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button asChild className="w-full justify-start h-12" size="lg">
-                <Link href="/admin/pendaftaran" className="flex items-center gap-3">
-                  <div className="rounded-full bg-white p-1">
-                    <FileText className="h-4 w-4 text-primary" />
+          {/* Quick Actions & Stats */}
+          <div className="space-y-6">
+            <Card className="border-blue-200/50 bg-gradient-to-br from-white to-blue-50/30 backdrop-blur-sm shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold text-slate-800">Ringkasan Status</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-green-50/50 rounded-lg">
+                      <div className="flex items-center gap-2 font-medium text-green-800"><FileCheck className="h-4 w-4"/> Selesai (Granted)</div>
+                      <Badge variant="success">{stats.granted}</Badge>
                   </div>
-                  <div className="text-left">
-                    <p className="font-medium">Kelola Pendaftaran</p>
-                    <p className="text-xs text-white/80">Review semua pendaftaran</p>
+                  <div className="flex justify-between items-center p-3 bg-amber-50/50 rounded-lg">
+                      <div className="flex items-center gap-2 font-medium text-amber-800"><FileClock className="h-4 w-4"/> Perlu Direview</div>
+                      <Badge variant="warning">{stats.submitted}</Badge>
                   </div>
-                </Link>
-              </Button>
-              
-              <Button asChild variant="outline" className="w-full justify-start h-12" size="lg">
-                <Link href="/admin/users" className="flex items-center gap-3">
-                  <div className="rounded-full bg-muted p-1">
-                    <Users className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex justify-between items-center p-3 bg-red-50/50 rounded-lg">
+                      <div className="flex items-center gap-2 font-medium text-red-800"><AlertCircle className="h-4 w-4"/> Perlu Revisi</div>
+                      <Badge variant="destructive">{stats.revision}</Badge>
                   </div>
-                  <div className="text-left">
-                    <p className="font-medium">Kelola Pengguna</p>
-                    <p className="text-xs text-muted-foreground">Manajemen user</p>
+                   <div className="flex justify-between items-center p-3 bg-slate-50/50 rounded-lg">
+                      <div className="flex items-center gap-2 font-medium text-slate-800"><FileX className="h-4 w-4"/> Ditolak</div>
+                      <Badge variant="secondary">{stats.rejected}</Badge>
                   </div>
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
