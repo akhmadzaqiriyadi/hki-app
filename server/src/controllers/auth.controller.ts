@@ -24,6 +24,21 @@ export const register = async (req: Request, res: Response) => {
         password: hashedPassword,
       },
     });
+
+    try {
+      const subject = "Selamat Datang di Portal HKI UTY!";
+      const message = `Halo ${newUser.nama_lengkap},\n\nTerima kasih telah mendaftar di Portal HKI UTY. Akun Anda telah berhasil dibuat.\n\nAnda sekarang dapat login dan mulai mendaftarkan karya Anda.\n\nSalam,\nTim Sentra HKI UTY`;
+
+      await sendMail({
+        to: newUser.email,
+        subject: subject,
+        text: message,
+        html: `<p>${message.replace(/\n/g, '<br>')}</p>`,
+      });
+    } catch (emailError) {
+      console.error("Gagal mengirim email selamat datang:", emailError);
+      // Jangan hentikan proses hanya karena email gagal terkirim
+    }
     res.status(201).json({ 
         message: "Registrasi berhasil!",
         userId: newUser.id 

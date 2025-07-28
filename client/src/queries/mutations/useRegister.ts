@@ -22,7 +22,7 @@ export const useRegister = () => {
     }),
     onSuccess: () => {
       toast.success("Registrasi Berhasil!", {
-        description: "Silakan cek email Anda untuk verifikasi, lalu login.",
+        description: "Akun Anda berhasil dibuat. Kami telah mengirimkan email selamat datang ke alamat email Anda.",
       });
       router.push("/login");
     },

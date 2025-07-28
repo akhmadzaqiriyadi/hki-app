@@ -77,7 +77,7 @@ model Pendaftaran {
   sertifikat_uploaded_at  DateTime?
   
   // Relasi: Satu pendaftaran dimiliki oleh satu pengguna (User)
-  user    User   @relation(fields: [userId], references: [id])
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId  String @map("user_id")
 
   // Relasi: Satu pendaftaran bisa memiliki banyak pencipta
