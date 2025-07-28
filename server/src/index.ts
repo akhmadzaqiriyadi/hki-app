@@ -1,13 +1,12 @@
+import dotenv from 'dotenv';
+dotenv.config();
 // server/src/index.ts
 import express, { Express, Request, Response } from "express";
-import dotenv from "dotenv";
 import cors from "cors";
 import authRoutes from './routes/auth.routes';
 import pendaftaranRoutes from './routes/pendaftaran.routes';
 import adminRoutes from './routes/admin.routes';
 import userRoutes from "./routes/user.routes";
-
-dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT || 8000;
