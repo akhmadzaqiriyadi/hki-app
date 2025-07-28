@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import path from 'path';
-import fs from 'fs'; 
-import { Prisma } from '@prisma/client'; // <-- TAMBAHKAN IMPORT INI
+import fs from 'fs';
+import { Prisma } from '@prisma/client';
 
+// Membuat draf pendaftaran baru
 export const createDraftPendaftaran = async (req: Request, res: Response) => {
-  // PERBAIKAN: Gunakan 'id' bukan 'userId'
   const userId = req.user?.id; 
   if (!userId) {
     return res.status(401).json({ message: 'Otentikasi diperlukan' });
@@ -26,8 +26,8 @@ export const createDraftPendaftaran = async (req: Request, res: Response) => {
   }
 };
 
+// Mengambil semua pendaftaran milik pengguna yang login
 export const getMyPendaftaran = async (req: Request, res: Response) => {
-  // PERBAIKAN: Gunakan 'id' bukan 'userId'
   const userId = req.user?.id; 
   try {
     const pendaftaran = await prisma.pendaftaran.findMany({
@@ -41,19 +41,18 @@ export const getMyPendaftaran = async (req: Request, res: Response) => {
   }
 };
 
+// Mengambil detail satu pendaftaran berdasarkan ID
 export const getPendaftaranById = async (req: Request, res: Response) => {
   const { id } = req.params;
-  // PERBAIKAN: Gunakan 'id' bukan 'userId'
   const userId = req.user?.id; 
   try {
     const pendaftaran = await prisma.pendaftaran.findUnique({
       where: { id },
-      include: { pencipta: true, user: { select: { nama_lengkap: true, email: true } } },
+      include: { pencipta: true },
     });
 
-    // Hanya user pemilik atau admin yang bisa melihat detail
     if (!pendaftaran || (pendaftaran.userId !== userId && req.user?.role !== 'Admin')) {
-      return res.status(404).json({ message: 'Pendaftaran tidak ditemukan' });
+      return res.status(404).json({ message: 'Pendaftaran tidak ditemukan atau Anda tidak memiliki akses.' });
     }
     res.status(200).json(pendaftaran);
   } catch (error) {
@@ -62,9 +61,9 @@ export const getPendaftaranById = async (req: Request, res: Response) => {
   }
 };
 
+// Memperbarui pendaftaran
 export const updatePendaftaran = async (req: Request, res: Response) => {
   const { id } = req.params;
-  // PERBAIKAN: Gunakan 'id' bukan 'userId'
   const userId = req.user?.id; 
   
   const { pencipta: penciptaJson, ...formData } = req.body;
@@ -78,14 +77,7 @@ export const updatePendaftaran = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Pendaftaran tidak ditemukan atau Anda tidak memiliki akses.' });
     }
     
-    const {
-      id: bodyId,
-      userId: bodyUserId,
-      createdAt,
-      updatedAt,
-      ...safeFormData
-    } = formData;
-
+    const { id: bodyId, userId: bodyUserId, createdAt, updatedAt, ...safeFormData } = formData;
     const pendaftaranData: any = { ...safeFormData };
 
     if (pendaftaranData.tanggal_diumumkan) {
@@ -105,13 +97,16 @@ export const updatePendaftaran = async (req: Request, res: Response) => {
     if (files) {
       for (const key in files) {
         const file = files[key][0];
-        pendaftaranData[key] = `/uploads/${file.filename}`; // Simpan path relatif
+        pendaftaranData[key] = `/uploads/${file.filename}`;
       }
     }
 
+    // --- PERBAIKAN: Hapus field 'user' dari data yang akan diupdate ---
+    delete pendaftaranData.user;
+    // --- AKHIR PERBAIKAN ---
+
     const penciptaData = penciptaJson ? JSON.parse(penciptaJson) : [];
     
-    // --- PERBAIKAN: Tambahkan tipe 'Prisma.TransactionClient' pada 'tx' ---
     const transaction = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.pencipta.deleteMany({ where: { pendaftaranId: id } });
 
@@ -126,7 +121,7 @@ export const updatePendaftaran = async (req: Request, res: Response) => {
       
       const updatedPendaftaran = await tx.pendaftaran.update({
         where: { id },
-        data: pendaftaranData,
+        data: pendaftaranData, // Sekarang data sudah bersih
         include: { pencipta: true }
       });
 
@@ -140,10 +135,10 @@ export const updatePendaftaran = async (req: Request, res: Response) => {
   }
 };
 
+// Menghapus draf pendaftaran
 export const deletePendaftaran = async (req: Request, res: Response) => {
   const { id } = req.params;
-  // PERBAIKAN: Gunakan 'id' bukan 'userId'
-  const userId = req.user?.id; 
+  const userId = req.user?.id;
 
   try {
     const draft = await prisma.pendaftaran.findFirst({
@@ -169,10 +164,10 @@ export const deletePendaftaran = async (req: Request, res: Response) => {
   }
 };
 
+// Mengambil file yang diproteksi
 export const getProtectedFile = async (req: Request, res: Response) => {
   const { filename } = req.params;
-  // PERBAIKAN: Gunakan 'id' bukan 'userId'
-  const userId = req.user?.id; 
+  const userId = req.user?.id;
 
   try {
     const whereClause: any = {
@@ -185,8 +180,7 @@ export const getProtectedFile = async (req: Request, res: Response) => {
           { sertifikat_hki_url: { contains: filename } },
         ],
     };
-    
-    // Jika bukan admin, batasi hanya untuk file milik sendiri
+
     if (req.user?.role !== 'Admin') {
         whereClause.userId = userId;
     }
@@ -211,9 +205,9 @@ export const getProtectedFile = async (req: Request, res: Response) => {
   }
 };
 
+// Mengunggah bukti pembayaran
 export const submitPaymentProof = async (req: Request, res: Response) => {
   const { id } = req.params;
-  // PERBAIKAN: Gunakan 'id' bukan 'userId'
   const userId = req.user?.id; 
   const file = req.file;
 
@@ -252,10 +246,10 @@ export const submitPaymentProof = async (req: Request, res: Response) => {
   }
 };
 
+// Finalisasi draf pendaftaran
 export const finalizePendaftaran = async (req: Request, res: Response) => {
   const { id } = req.params;
-  // PERBAIKAN: Gunakan 'id' bukan 'userId'
-  const userId = req.user?.id; 
+  const userId = req.user?.id;
 
   try {
     const draft = await prisma.pendaftaran.findFirst({
