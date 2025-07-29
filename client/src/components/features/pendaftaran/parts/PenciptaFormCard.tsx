@@ -39,27 +39,32 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 const programStudiUTY = [
-  "Informatika - S1",
-  "Sistem Informasi - S1",
-  "Teknik Komputer - S1",
-  "Teknik Elektro - S1",
-  "Teknik Industri - S1",
-  "Arsitektur - S1",
-  "Perencanaan Wilayah & Kota - S1",
-  "Manajemen - S1",
-  "Akuntansi - S1",
-  "Psikologi - S1",
-  "Sastra Inggris - S1",
-  "Ilmu Komunikasi - S1",
-  "Bimbingan dan Konseling - S1",
-  "Pendidikan Teknologi Informasi - S1",
-  "Agroindustri - S1",
-  "Sistem Informasi - D3",
-  "Manajemen Perusahaan - D3",
-  "Akuntansi - D3",
-  "Bahasa Inggris - D3",
-  "Teknologi Informasi - S2 (Pascasarjana)",
-  "Manajemen - S2 (Pascasarjana)",
+  "-",
+  "D3 Akuntansi",
+  "D3 Sistem Informasi",
+  "D4 Destinasi Pariwisata",
+  "S1 Akuntansi",
+  "S1 Arsitektur",
+  "S1 Bimbingan dan Konseling",
+  "S1 Ilmu Hubungan Internasional",
+  "S1 Ilmu Komunikasi",
+  "S1 Informatika",
+  "S1 Informatika Medis",
+  "S1 Manajemen",
+  "S1 Pendidikan Bahasa Inggris",
+  "S1 Pendidikan Teknologi Informasi",
+  "S1 Perencanaan Wilayah dan Kota",
+  "S1 Psikologi",
+  "S1 Sains Data",
+  "S1 Sastra Inggris",
+  "S1 Sistem Informasi",
+  "S1 Teknik Elektro",
+  "S1 Teknik Industri",
+  "S1 Teknik Komputer",
+  "S1 Teknik Sipil",
+  "S2 Manajemen",
+  "S2 Teknologi Informasi",
+  "S3 Ilmu Manajemen"
 ];
 
 interface PenciptaFormCardProps {
@@ -319,11 +324,11 @@ export function PenciptaFormCard({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-slate-700 font-semibold">
-                    NIP/NIM
+                    NUPTK/NPM
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="NIP atau NIM..."
+                      placeholder="NUPTK atau NPM..."
                       {...field}
                       className={formInputStyle}
                     />

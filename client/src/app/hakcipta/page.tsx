@@ -97,14 +97,14 @@ const HakCiptaPage = () => {
   const feeStructure = [
     {
       category: "Lembaga Pendidikan",
-      nonSoftware: "Rp. 250.000",
-      software: "Rp. 350.000",
+      nonSoftware: "Rp. 225.000",
+      software: "Rp. 325.000",
       unit: "Per Permohonan",
     },
     {
       category: "Umum",
-      nonSoftware: "Rp. 500.000",
-      software: "Rp. 700.000",
+      nonSoftware: "Rp. 450.000",
+      software: "Rp. 650.000",
       unit: "Per Permohonan",
     },
   ];

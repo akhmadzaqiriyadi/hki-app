@@ -377,7 +377,7 @@ export default function DashboardPage() {
                   className="w-full justify-start h-12 border-blue-200 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all duration-200"
                   size="lg"
                 >
-                  <Link href="/panduan" className="flex items-center gap-3">
+                  <Link href="https://drive.google.com/file/d/1v7G20iSnZ8BVJYy42lZMKdQU3jHFI9x0/view?usp=sharing" className="flex items-center gap-3" target="_blank" rel="noopener noreferrer">
                     <div className="rounded-full bg-blue-50 p-1">
                       <BookOpen className="h-4 w-4 text-blue-700" />
                     </div>

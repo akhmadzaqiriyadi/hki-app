@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-// Konfigurasi biaya pendaftaran terpusat di sini
+// Konfigurasi biaya pendaftaran 
 const BiayaPendaftaranConfig = {
   "Civitas Akademik UTY": {
     SOFTWARE: 325000,
@@ -10,7 +10,7 @@ const BiayaPendaftaranConfig = {
   },
   "Umum": {
     SOFTWARE: 650000,
-    NON_SOFTWARE: 550000,
+    NON_SOFTWARE: 450000,
   },
 };
 
