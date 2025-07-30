@@ -49,8 +49,8 @@ export default function PaymentUploadForm({ pendaftaranId, jenisPemilik, jenisKa
           <div className="mt-4 pt-4 border-t text-sm">
             <p className="font-semibold">Silakan transfer ke:</p>
             <p>E-Wallet: <span className="font-mono font-semibold">DANA</span></p>
-            <p>Atas Nama: <span className="font-mono font-semibold">UCH</span></p>
-            <p>Nomor: <span className="font-mono font-semibold">[NOMOR DANA UCH]</span></p>
+            <p>Atas Nama: <span className="font-mono font-semibold">SINDHI KHARISMA</span></p>
+            <p>Nomor: <span className="font-mono font-semibold">[082336623249]</span></p>
           </div>
         </div>
 
