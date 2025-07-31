@@ -42,6 +42,7 @@ import {
 import { Step1InformasiKarya } from "./parts/Step1_InformasiKarya";
 import { Step2DataPencipta } from "./parts/Step2_DataPencipta";
 import { Step3UnggahDokumen } from "./parts/Step3_UnggahDokumen";
+import { toast } from "sonner";
 
 interface Wilayah {
   id: string;
@@ -325,15 +326,67 @@ export default function PendaftaranForm({ pendaftaran }: PendaftaranFormProps) {
                                   </div>
                                 </div>
                                 <AlertDialogDescription className="text-slate-600 font-medium">
-                                  Setelah difinalisasi, pendaftaran akan dikirim untuk direview dan Anda tidak dapat mengubah datanya lagi. Pastikan semua informasi sudah benar.
+                                  Setelah difinalisasi, pendaftaran akan dikirim
+                                  untuk direview dan Anda tidak dapat mengubah
+                                  datanya lagi. Pastikan semua informasi sudah
+                                  benar.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter className="gap-3">
                                 <AlertDialogCancel>Batal</AlertDialogCancel>
                                 <AlertDialogAction
-                                  onClick={form.handleSubmit(() =>
-                                    processSubmit("submitted")
-                                  )}
+                                  onClick={async () => {
+                                    const isValid = await form.trigger(); // Memicu validasi semua field
+                                    if (isValid) {
+                                      processSubmit("submitted"); // Jika valid, kirim data
+                                    } else {
+                                      // Jika tidak valid, cari dan tampilkan error pertama
+                                      const errors = form.formState.errors;
+                                      let errorMessage =
+                                        "Harap periksa kembali semua data yang Anda masukkan di setiap langkah.";
+                                      const errorKeys = Object.keys(errors);
+
+                                      if (errorKeys.length > 0) {
+                                        const firstErrorKey =
+                                          errorKeys[0] as keyof FormValues;
+
+                                        if (
+                                          firstErrorKey === "pencipta" &&
+                                          Array.isArray(errors.pencipta)
+                                        ) {
+                                          // Cari error spesifik di dalam data pencipta
+                                          const penciptaErrors =
+                                            errors.pencipta as any[];
+                                          for (
+                                            let i = 0;
+                                            i < penciptaErrors.length;
+                                            i++
+                                          ) {
+                                            if (penciptaErrors[i]) {
+                                              const fieldError = Object.keys(
+                                                penciptaErrors[i]
+                                              )[0];
+                                              errorMessage = `Data Pencipta #${
+                                                i + 1
+                                              } tidak valid. Mohon periksa kolom "${fieldError}".`;
+                                              break;
+                                            }
+                                          }
+                                        } else {
+                                          // Error umum di Langkah 1 atau 3
+                                          const fieldLabel = firstErrorKey
+                                            .replace(/_/g, " ")
+                                            .replace("url", "")
+                                            .trim();
+                                          errorMessage = `Kolom "${fieldLabel}" tidak valid atau belum diisi sesuai format. Silakan periksa kembali.`;
+                                        }
+                                      }
+
+                                      toast.error("Validasi Gagal", {
+                                        description: errorMessage,
+                                      });
+                                    }
+                                  }}
                                   disabled={isPending}
                                   className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-lg"
                                 >

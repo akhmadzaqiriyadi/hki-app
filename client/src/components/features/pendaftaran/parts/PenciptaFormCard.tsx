@@ -238,6 +238,32 @@ export function PenciptaFormCard({
                 </FormItem>
               )}
             />
+                        <FormField
+              control={control}
+              name={`pencipta.${index}.jenis_kelamin`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-slate-700 font-semibold">
+                    Jenis Kelamin
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className={formInputStyle}>
+                        <SelectValue placeholder="Pilih jenis kelamin..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Pria">Pria</SelectItem>
+                      <SelectItem value="Wanita">Wanita</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={control}
               name={`pencipta.${index}.kewarganegaraan`}
